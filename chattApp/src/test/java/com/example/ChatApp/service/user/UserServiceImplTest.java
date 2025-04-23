@@ -7,7 +7,22 @@ import org.junit.jupiter.api.Test;
 class UserServiceImplTest {
 
 	@Test
-	void test() {
+	void testUserServiceImpl() {
+		fail("まだ実装されていません");
+	}
+
+	@Test
+	void testLoginUser() {
+		fail("まだ実装されていません");
+	}
+
+	@Test
+	void testStatusChangeuser() {
+		fail("まだ実装されていません");
+	}
+
+	@Test
+	void testRegisterUser() {
 		fail("まだ実装されていません");
 	}
 
