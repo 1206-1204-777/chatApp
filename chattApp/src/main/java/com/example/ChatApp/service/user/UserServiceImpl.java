@@ -1,6 +1,7 @@
 package com.example.ChatApp.service.user;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class UserServiceImpl implements UserService {
 		if (username.isBlank() || password.isBlank()) {
 			throw new AuthenticationFailedException("ユーザー名またはパスワードが入力されていません。");
 		}
-		UserEntity user = repository.findByUserName(username)
+		UserEntity user = repository.findByUsername(username)
 				.orElseThrow(() -> new AuthenticationFailedException("ユーザーが存在しません"));
 
 		if (!encoder.matches(password, user.getPassword())) {
@@ -67,6 +68,7 @@ public class UserServiceImpl implements UserService {
 		if (username.isBlank() || password.isBlank()) {
 			throw new AuthenticationFailedException("ユーザー名またはパスワードが入力されていません。");
 		}
+		user.setId(UUID.randomUUID().toString());
 		user.setUsername(username);
 		user.setPassword(encoder.encode(password));
 		user.setStatus(true);

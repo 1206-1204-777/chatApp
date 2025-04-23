@@ -9,5 +9,5 @@ import com.example.ChatApp.entity.UserEntity;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity,String>{
-	Optional<UserEntity>findByUserName(String username);
+	Optional<UserEntity>findByUsername(String username);
 }
