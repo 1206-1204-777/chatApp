@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import com.example.ChatApp.dto.user.SendUserDto;
 import com.example.ChatApp.dto.user.UserLoginDto;
 import com.example.ChatApp.dto.user.UserRegistrationDto;
-import com.example.ChatApp.exception.AuthenticationFailedException;
+import com.example.ChatApp.exception.UserSaveFailedException;
 import com.example.ChatApp.service.user.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,17 +43,39 @@ class UserControllerTest {
 		assertEquals("taro", response.getBody().getUsername());
 
 	}
+	
+	@Test
+	void ログイン失敗＿ユーザー入力なし() {
+		UserLoginDto loginDto = new UserLoginDto();
+		loginDto.setUsername(null);
+		loginDto.setPassword("pass123");
+
+		assertThrows(IllegalArgumentException.class,()->{
+			controller.login(loginDto);
+		});
+	}
+	
+	@Test
+	void ログイン失敗＿パスワード入力なし() {
+		UserLoginDto loginDto = new UserLoginDto();
+		loginDto.setUsername("taro");
+		loginDto.setPassword(null);
+
+		assertThrows(IllegalArgumentException.class,()->{
+			controller.login(loginDto);
+		});
+	}
 
 	@Test
-	void ログイン失敗時() {
+	void ログイン失敗時_イレギュラー() {
 		UserLoginDto loginDto = new UserLoginDto();
 		loginDto.setUsername("tar");
 		loginDto.setPassword("pas123");
 		
-		when(service.loginUser(loginDto)).thenThrow(new AuthenticationFailedException(
+		when(service.loginUser(loginDto)).thenThrow(new IllegalArgumentException(
 				"ログインに失敗しました。"));
 		
-		assertThrows(AuthenticationFailedException.class,()->
+		assertThrows(IllegalArgumentException.class,()->
 		{controller.login(loginDto);});
 	}
 	
@@ -80,15 +102,11 @@ class UserControllerTest {
 	void 登録失敗時() {
 		
 		UserRegistrationDto registration = new UserRegistrationDto();
-		registration.setUsername("");
-		registration.setPassword("");
+		registration.setUsername(null);
+		registration.setPassword(null);
+
 		
-		//SendUserDto reslut = new SendUserDto(registration.getUsername(),registration.getPassword());
-		
-		when(service.registerUser(registration)).thenThrow(new IllegalArgumentException(
-				"登録に失敗しました。"));
-		
-		assertThrows(IllegalArgumentException.class,()->
+		assertThrows(UserSaveFailedException.class,()->
 		{controller.Registration(registration);});
 	}
 	
