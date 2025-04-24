@@ -15,4 +15,6 @@ public class SendUserDto {
 		this.userId = userId;
 		this.username = username;
 	}
+
+
 }
