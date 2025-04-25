@@ -14,14 +14,17 @@ import lombok.Data;
 @Table(name = "users")
 public class UserEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	private String id;
+	private Long id;
+	
+	@Column(name = "user_id",nullable = false,unique = true)
+	private int userId;
 
-	@Column(name = "username", nullable = false, unique = true)
+	@Column(name = "username", nullable = false, unique = true, updatable = false)
 	private String username;
 
-	@Column(name = "password",nullable = false)
+	@Column(name = "password", nullable = false)
 	private String password;
 
 	@Column(name = "status")

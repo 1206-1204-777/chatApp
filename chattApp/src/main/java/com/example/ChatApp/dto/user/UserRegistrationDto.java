@@ -12,5 +12,5 @@ private String username;
 @NotBlank
 private String password;
 @Min(1)
-private int role;
+private int role = 1;
 }

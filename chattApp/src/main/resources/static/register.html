@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ユーザー登録画面</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { display: block; margin: 10px 0; }
+    #message { margin-top: 10px; color: red; }
+  </style>
+</head>
+<body>
+  <h1>ユーザー登録</h1>
+
+  <input type="text" id="username" placeholder="ユーザー名" />
+  <input type="password" id="password" placeholder="パスワード" />
+  <button onclick="register()">登録</button>
+
+  <p id="message"></p>
+
+  <p><a href="login.html">ログインはこちら</a></p>
+
+  <script>
+    async function register() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const message = document.getElementById("message");
+
+      if (!username || !password) {
+        message.innerText = "ユーザー名とパスワードを入力してください";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8080/api/user/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          message.style.color = "green";
+          message.innerText = "登録成功！ユーザーID：" + result.userId;
+        } else {
+          message.style.color = "red";
+          message.innerText = "登録失敗：" + ("エラーが発生しました");
+        }
+      } catch (e) {
+        message.innerText = "通信エラー：" + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

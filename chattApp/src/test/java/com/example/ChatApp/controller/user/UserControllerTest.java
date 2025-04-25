@@ -33,13 +33,13 @@ class UserControllerTest {
 		loginDto.setPassword("pass123");
 
 		/*ユーザー情報取得*/
-		SendUserDto registration = new SendUserDto("user1", "taro");
+		SendUserDto registration = new SendUserDto(1,"taro");
 		/*Mockへの登録と仮の戻り値を設定*/
 		when(service.loginUser(loginDto)).thenReturn(registration);
 
 		ResponseEntity<SendUserDto> response = controller.login(loginDto);
 		assertEquals(200, response.getStatusCode().value());
-		assertEquals("user1", response.getBody().getUserId());
+		assertEquals(1L, response.getBody().getUserId());
 		assertEquals("taro", response.getBody().getUsername());
 
 	}
@@ -86,14 +86,14 @@ class UserControllerTest {
 		registration.setUsername("taro");
 		registration.setPassword("pass123");
 		
-		SendUserDto result = new SendUserDto("user1","taro");
+		SendUserDto result = new SendUserDto(1,"taro");
 		
 		when(service.registerUser(registration)).thenReturn(result);
 		
 		ResponseEntity<SendUserDto> response = controller.Registration(registration);
 		assertEquals(200,response.getStatusCode().value());
 		assertEquals("taro",response.getBody().getUsername());
-		assertEquals("user1",response.getBody().getUserId());
+		assertEquals(1L,response.getBody().getUserId());
 		
 	}
 	

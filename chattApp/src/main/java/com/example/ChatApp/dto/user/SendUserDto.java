@@ -7,11 +7,11 @@ import lombok.Data;
 @Data
 public class SendUserDto {
 	@NotBlank
-	private String userId;
+	private int userId;
 	@NotBlank
 	private String username;
 	
-	public SendUserDto(String userId,String username) {
+	public SendUserDto(int userId,String username) {
 		this.userId = userId;
 		this.username = username;
 	}
