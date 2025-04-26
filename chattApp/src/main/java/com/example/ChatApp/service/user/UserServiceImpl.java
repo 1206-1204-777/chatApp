@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean statusChangeuser(String userId) {
+	public boolean statusChangeuser(Long userId) {
 		Optional<UserEntity> optionalUser = repository.findById(userId);
 		
 		if(!optionalUser.isPresent()) {

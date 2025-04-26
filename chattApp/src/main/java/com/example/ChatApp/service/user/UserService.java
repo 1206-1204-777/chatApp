@@ -7,7 +7,9 @@ import com.example.ChatApp.dto.user.UserRegistrationDto;
 public interface UserService {
 	public SendUserDto loginUser(UserLoginDto dto);
 
-	public boolean statusChangeuser(String userId);
+	public boolean statusChangeuser(Long userId);
 	
 	public SendUserDto registerUser(UserRegistrationDto dto);
+
+
 }
