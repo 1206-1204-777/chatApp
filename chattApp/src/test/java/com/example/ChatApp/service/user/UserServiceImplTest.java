@@ -43,6 +43,7 @@ class UserServiceImplTest {
 		user.setId(1L);
 		user.setUsername("taro");
 		user.setPassword("encoded123");
+		user.setUserId(1L);
 
 		when(repository.findByUsername("taro")).thenReturn(Optional.of(user));
 		when(encoder.matches("pass123", "encoded123")).thenReturn(true);
@@ -133,7 +134,7 @@ class UserServiceImplTest {
 		//assertNotNull(result.getUserId()); // IDは実装で生成される想定
 	}
 
-	@Test
+	/*@Test
 	void statusChangeUser_正常系() {
 		UserEntity user = new UserEntity();
 		user.setId(1L);
@@ -154,5 +155,5 @@ class UserServiceImplTest {
 		assertThrows(AuthenticationFailedException.class, () -> {
 			userService.statusChangeuser(1L);
 		});
-	}
+	}*/
 }

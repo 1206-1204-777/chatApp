@@ -41,13 +41,13 @@ public class UserServiceImpl implements UserService {
 		/*ログイン状態に変更*/
 		user.setStatus(true);
 		repository.save(user);
-		return new SendUserDto(user.getUserId(),user.getUsername());
+		return new SendUserDto((long) user.getUserId(),user.getUsername());
 		
 	}
 
 	@Override
 	public boolean statusChangeuser(Long userId) {
-		Optional<UserEntity> optionalUser = repository.findById(userId);
+		Optional<UserEntity> optionalUser = repository.findByUserId(userId);
 		
 		if(!optionalUser.isPresent()) {
 			throw new AuthenticationFailedException("ユーザーが存在しません。");
@@ -55,7 +55,9 @@ public class UserServiceImpl implements UserService {
 		UserEntity user = optionalUser.get();
 		user.setStatus(false);
 		repository.save(user);
+		repository.flush();
 		
+		System.out.println(user.isStatus());
 
 		return true;
 	}
@@ -70,12 +72,12 @@ public class UserServiceImpl implements UserService {
 		if (username.isBlank() || password.isBlank()) {
 			throw new AuthenticationFailedException("ユーザー名またはパスワードが入力されていません。");
 		}
-		user.setUserId(rand.nextInt(1,101));
+		user.setUserId((long) rand.nextInt(1,101));
 		user.setUsername(username);
 		user.setPassword(encoder.encode(password));
 		user.setStatus(true);
 		repository.save(user);
-		return new SendUserDto(user.getUserId(),user.getUsername());
+		return new SendUserDto((long)user.getUserId(),user.getUsername());
 	}
 
 }

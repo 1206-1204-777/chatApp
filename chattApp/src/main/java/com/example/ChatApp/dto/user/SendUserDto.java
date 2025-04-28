@@ -1,20 +1,22 @@
 package com.example.ChatApp.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 import lombok.Data;
 
 @Data
 public class SendUserDto {
-	@NotBlank
-	private int userId;
+	@Positive
+	private Long userId;
 	@NotBlank
 	private String username;
-	
-	public SendUserDto(int userId,String username) {
+	public SendUserDto(Long userId,String username) {
 		this.userId = userId;
 		this.username = username;
+
 	}
 
 
 }
+	

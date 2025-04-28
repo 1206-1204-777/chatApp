@@ -34,6 +34,14 @@ public class UserController {
 
 		
 	}
+	
+	/*ログアウト処理*/
+	@PostMapping("/logout")
+	public ResponseEntity<Boolean> logout(@RequestBody @Valid SendUserDto dto){
+		boolean reslut = service.statusChangeuser(dto.getUserId());
+		return ResponseEntity.ok(reslut);
+		
+	}
 	/*登録用*/
 	@PostMapping("/register")
 	public ResponseEntity<SendUserDto> Registration(@RequestBody @Valid UserRegistrationDto dto){

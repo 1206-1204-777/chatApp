@@ -19,7 +19,7 @@ public class UserEntity {
 	private Long id;
 	
 	@Column(name = "user_id",nullable = false,unique = true)
-	private int userId;
+	private Long userId;
 
 	@Column(name = "username", nullable = false, unique = true, updatable = false)
 	private String username;

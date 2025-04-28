@@ -19,10 +19,12 @@ public class ChatEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Long id;
-	
+
+	@Column
+	private String username;
 	@Column(name = "chat_message")
-	private String message;
-	
-	@Column(name = "updated_at",updatable = true)
-	private Timestamp uodatedAt;
+	private String chatMessage;
+
+	@Column(name = "updated_at", updatable = true)
+	private Timestamp updatedAt;
 }

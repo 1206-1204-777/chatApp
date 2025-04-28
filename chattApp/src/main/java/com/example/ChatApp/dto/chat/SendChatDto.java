@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class SendChatDto {
-private int userId;
+private Long userId;
 private String username;
 private String chatMessage;
 }

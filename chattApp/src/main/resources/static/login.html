@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン画面</title>
+<style>
+body {
+  font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  background-color: #f5f5f5;
+}
+
+h1 {
+  color: #4a76a8;
+  border-bottom: 2px solid #4a76a8;
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #4a76a8;
+  outline: none;
+}
+
+button {
+  background-color: #4a76a8;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+  width: 100%;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #3a5f86;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+#message {
+  margin-top: 15px;
+  color: #c62828;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+.success-message {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+.register-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.register-link a {
+  color: #4a76a8;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  input, button {
+    font-size: 14px;
+  }
+}
+</style>
+</head>
+<body>
+<h1>ログイン</h1>
+
+<div class="form-group">
+  <label for="username">ユーザー名</label>
+  <input type="text" id="username" placeholder="ユーザー名を入力" />
+</div>
+
+<div class="form-group">
+  <label for="password">パスワード</label>
+  <input type="password" id="password" placeholder="パスワードを入力" />
+</div>
+
+<button id="loginButton" onclick="login()">ログイン</button>
+
+<p id="message"></p>
+
+<p class="register-link">登録がまだの方は <a href="register.html">こちら</a></p>
+
+<script>
+// URLからパラメータを取得する関数
+function getUrlParameter(name) {
+  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+  const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+  const results = regex.exec(location.search);
+  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+}
+
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', function() {
+  const errorMsg = getUrlParameter('error');
+  if (errorMsg) {
+    const message = document.getElementById('message');
+    message.innerText = decodeURIComponent(errorMsg);
+    message.style.display = 'block';
+  }
+  
+  // Enterキーでのログイン
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      login();
+    }
+  });
+  
+  // 以前のセッションがあるか確認 (オプション)
+  checkExistingSession();
+});
+
+// 既存のセッションをチェック
+async function checkExistingSession() {
+  try {
+    // セッションチェックのAPIを呼び出し
+    const response = await fetch('/api/user/check-session', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (response.ok) {
+      // データを確認してからリダイレクト
+      const data = await response.json();
+      if (data && data.authenticated === true) {
+        // セッションが有効ならチャット画面に移動
+        redirectToChat();
+      }
+    }
+  } catch (error) {
+    console.warn('セッションチェックエラー:', error);
+    // エラーの場合は単にログイン画面を表示（何もしない）
+  }
+}
+
+// ログイン処理
+async function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("message");
+  const loginButton = document.getElementById("loginButton");
+  
+  // メッセージ表示をリセット
+  message.style.display = "none";
+  message.className = "";
+  
+  // 入力検証
+  if (!username.trim() || !password.trim()) {
+    message.innerText = "ユーザー名とパスワードを入力してください";
+    message.style.display = "block";
+    return;
+  }
+  
+  // ボタンの状態を変更
+  loginButton.disabled = true;
+  loginButton.innerHTML = '<span class="loading"></span>ログイン中...';
+  
+  try {
+    const response = await fetch("/api/user/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: 'include', // Cookieを含める
+      body: JSON.stringify({ username, password })
+    });
+    
+    if (response.ok) {
+      // APIからのレスポンスを取得
+      const result = await response.json();
+      
+      // ユーザー情報をセッションストレージに保存
+      sessionStorage.setItem('userId', result.userId);
+      sessionStorage.setItem('username', username);
+      
+      // ログイン成功
+      message.innerText = "ログイン成功！チャット画面に移動します...";
+      message.classList.add("success-message");
+      message.style.display = "block";
+      
+      // チャット画面にリダイレクト
+      setTimeout(redirectToChat, 1000);
+    } else {
+      // ログイン失敗
+      const result = await response.json().catch(() => ({}));
+      message.innerText = "ログイン失敗：" + (result.message || "認証エラーが発生しました");
+      message.style.display = "block";
+      
+      // ボタンを元に戻す
+      loginButton.disabled = false;
+      loginButton.innerHTML = 'ログイン';
+    }
+  } catch (e) {
+    // 通信エラー
+    message.innerText = "サーバーとの通信に失敗しました。後でもう一度お試しください。";
+    message.style.display = "block";
+    
+    // ボタンを元に戻す
+    loginButton.disabled = false;
+    loginButton.innerHTML = 'ログイン';
+  }
+}
+
+// チャット画面へのリダイレクト
+function redirectToChat() {
+  // アプリケーションのルートからの相対パスを使用
+  window.location.href = "chat.html";
+}
+</script>
+</body>
+</html>
