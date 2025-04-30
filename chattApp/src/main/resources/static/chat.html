@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チャット送信画面</title>
+<style>
+body {
+  font-family: 'Hiragino Kaku Gothic Pro', 'メイリオ', sans-serif;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #f5f5f5;
+}
+
+h1 {
+  color: #4a76a8;
+  border-bottom: 2px solid #4a76a8;
+  padding-bottom: 10px;
+}
+
+.user-info {
+  background-color: #e8f4fd;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid #4a76a8;
+}
+
+.user-info p {
+  margin: 5px 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  min-height: 100px;
+  resize: vertical;
+}
+
+button {
+  background-color: #4a76a8;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+  width: 100%;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #3a5f86;
+}
+
+button:disabled {
+  background-color: #cccccc;
+}
+
+#message {
+  margin-top: 15px;
+  color: #2e7d32;
+  background-color: #e8f5e9;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+#error {
+  margin-top: 15px;
+  color: #c62828;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+}
+
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.chat-history {
+  margin-top: 30px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.chat-message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-message.own {
+  background-color: #dcf8c6;
+  margin-left: 20%;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-message.other {
+  background-color: #fff;
+  margin-right: 20%;
+  border-bottom-left-radius: 2px;
+  border: 1px solid #eee;
+}
+
+.chat-message .username {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #555;
+}
+
+.chat-message .content {
+  margin-bottom: 5px;
+}
+
+.chat-message .timestamp {
+  text-align: right;
+  font-size: 12px;
+  color: #888;
+}
+
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: transparent;
+  color: #4a76a8;
+  border: 1px solid #4a76a8;
+  padding: 5px 10px;
+  width: auto;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.empty-chat {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  textarea, button {
+    font-size: 14px;
+  }
+  
+  .logout-btn {
+    position: static;
+    display: block;
+    margin: 10px 0 20px auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<button class="logout-btn" onclick="logout()">ログアウト</button>
+
+<h1>チャット</h1>
+
+<div class="user-info">
+  <p><strong>ユーザー名:</strong> <span id="displayUsername">読み込み中...</span></p>
+  <p><strong>ユーザーID:</strong> <span id="displayUserId">読み込み中...</span></p>
+</div>
+
+<div class="form-group">
+  <label for="messageContent">メッセージ内容</label>
+  <textarea id="messageContent" placeholder="メッセージを入力してください"></textarea>
+</div>
+
+<button id="sendButton" onclick="sendChat()">送信</button>
+
+<p id="message"></p>
+<p id="error"></p>
+
+<div class="chat-history" id="chatHistory">
+  <div class="empty-chat">チャット履歴を読み込んでいます...</div>
+</div>
+
+<script>
+// ユーザー情報
+let currentUser = {
+  id: null,
+  username: null
+};
+
+// ページロード時の処理
+document.addEventListener('DOMContentLoaded', function() {
+  // 初期化処理を開始
+  initializeChatPage();
+});
+
+// チャットページの初期化
+async function initializeChatPage() {
+  try {
+    // まずセッションストレージからユーザー情報を取得（ログインページからの遷移の場合）
+    const storedUserId = sessionStorage.getItem('userId');
+    const storedUsername = sessionStorage.getItem('username');
+    
+    if (storedUserId && storedUsername) {
+      // ストレージから取得した情報を設定
+      currentUser.id = storedUserId;
+      currentUser.username = storedUsername;
+      
+      // 画面に表示
+      document.getElementById('displayUsername').textContent = storedUsername;
+      document.getElementById('displayUserId').textContent = storedUserId;
+      
+      // チャット履歴を取得
+      await fetchChatHistory();
+      return;
+    }
+    
+    // セッションストレージにない場合はAPIで確認
+    await checkLoginStatus();
+  } catch (error) {
+    console.error('初期化エラー:', error);
+    // エラーの場合はログインページにリダイレクト
+    redirectToLogin("セッションが無効です。再ログインしてください。");
+  }
+}
+
+// ログイン状態チェック
+async function checkLoginStatus() {
+  try {
+    const response = await fetch('/api/user/check-session', {
+      method: 'GET',
+      credentials: 'include' // Cookieを含める
+    });
+    
+    if (!response.ok) {
+      // セッションが無効ならログインページにリダイレクト
+      throw new Error('ログインしていません');
+    }
+    
+    // セッションが有効ならユーザー情報を取得
+    await fetchUserInfo();
+    
+    // チャット履歴を取得
+    await fetchChatHistory();
+  } catch (error) {
+    console.error('セッションチェックエラー:', error);
+    redirectToLogin();
+    throw error; // エラーを再スロー
+  }
+}
+
+// ユーザー情報取得
+async function fetchUserInfo() {
+  try {
+    const response = await fetch('/api/user/current', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('ユーザー情報の取得に失敗しました');
+    }
+    
+    const userData = await response.json();
+    
+    // ユーザー情報を保存
+    currentUser.id = userData.id;
+    currentUser.username = userData.username;
+    
+    // セッションストレージにも保存
+    sessionStorage.setItem('userId', userData.id);
+    sessionStorage.setItem('username', userData.username);
+    
+    // 画面に表示
+    document.getElementById('displayUsername').textContent = userData.username;
+    document.getElementById('displayUserId').textContent = userData.id;
+    
+  } catch (error) {
+    console.error('ユーザー情報取得エラー:', error);
+    document.getElementById('error').textContent = 'ユーザー情報の取得に失敗しました。再ログインしてください。';
+    document.getElementById('error').style.display = 'block';
+    
+    // 少し待ってからログイン画面に戻る
+    setTimeout(() => redirectToLogin("ユーザー情報の取得に失敗しました"), 2000);
+    throw error;
+  }
+}
+
+// チャット履歴取得
+async function fetchChatHistory() {
+  try {
+    const response = await fetch('/api/chat/history', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    // チャット履歴表示エリアを取得
+    const chatHistoryElem = document.getElementById('chatHistory');
+    
+    if (!response.ok) {
+      chatHistoryElem.innerHTML = '<div class="empty-chat">チャット履歴を取得できませんでした</div>';
+      return;
+    }
+    
+    const chatHistory = await response.json();
+    
+    // チャット履歴を表示
+    if (chatHistory.length === 0) {
+      chatHistoryElem.innerHTML = '<div class="empty-chat">チャット履歴はありません。最初のメッセージを送信しましょう！</div>';
+    } else {
+      chatHistoryElem.innerHTML = '';
+      
+      chatHistory.forEach(chat => {
+        addChatMessageToUI(chat);
+      });
+    }
+    
+  } catch (error) {
+    console.warn('チャット履歴取得エラー:', error);
+    document.getElementById('chatHistory').innerHTML = '<div class="empty-chat">チャット履歴を取得できませんでした</div>';
+  }
+}
+
+// チャット送信処理
+async function sendChat() {
+  const messageContent = document.getElementById("messageContent").value;
+  const messageElem = document.getElementById("message");
+  const errorElem = document.getElementById("error");
+  const sendButton = document.getElementById("sendButton");
+  
+  // 表示をリセット
+  messageElem.style.display = "none";
+  errorElem.style.display = "none";
+  
+  // 入力検証
+  if (!messageContent.trim()) {
+    errorElem.textContent = "メッセージ内容は必須です。";
+    errorElem.style.display = "block";
+    return;
+  }
+  
+  // ユーザー情報の確認
+  if (!currentUser.id || !currentUser.username) {
+    errorElem.textContent = "ユーザー情報が取得できていません。ページを再読み込みしてください。";
+    errorElem.style.display = "block";
+    return;
+  }
+  
+  // 送信中の状態表示
+  sendButton.disabled = true;
+  sendButton.innerHTML = '<span class="loading"></span>送信中...';
+
+  try {
+    // POSTリクエストの作成
+    // サービスクラスのDTOに合わせて正しいプロパティ名を使用
+    const chatData = {
+      userId: currentUser.id.toString(),  // 文字列に変換
+      username: currentUser.username,
+      chatMessage: messageContent  // サービスクラスのDTOフィールド名に合わせる
+    };
+    
+    console.log('送信データ:', chatData);
+    
+    // チャットメッセージ送信
+    const response = await fetch("/api/chat/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: 'include',
+      body: JSON.stringify(chatData)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      
+      // 送信成功メッセージを表示
+      messageElem.textContent = "メッセージを送信しました！";
+      messageElem.style.display = "block";
+      
+      // 空のチャット履歴メッセージがあれば削除
+      const emptyChat = document.querySelector('.empty-chat');
+      if (emptyChat) {
+        emptyChat.remove();
+      }
+      
+      // UIにメッセージを追加
+      addChatMessageToUI({
+        id: result.id || currentUser.id,
+        username: currentUser.username,
+        message: messageContent,
+        timestamp: new Date().toISOString()
+      });
+      
+      // フォームをリセット
+      document.getElementById("messageContent").value = "";
+      
+      // 送信成功メッセージを一定時間後に消す
+      setTimeout(() => {
+        messageElem.style.display = "none";
+      }, 3000);
+    } else {
+      // エラーレスポンスの処理
+      let errMsg = "送信に失敗しました。";
+      
+      try {
+        const responseData = await response.json();
+        if (responseData && responseData.message) {
+          errMsg = responseData.message;
+        }
+      } catch (e) {
+        // JSONとして解析できない場合
+        try {
+          const textResponse = await response.text();
+          if (textResponse) {
+            errMsg = textResponse;
+          }
+        } catch (textErr) {
+          // テキストとしても取得できない場合
+          if (response.status === 400) {
+            errMsg = "入力内容に問題があります。";
+          } else if (response.status === 401) {
+            errMsg = "セッションが切れました。再ログインしてください。";
+            setTimeout(() => redirectToLogin("セッションが切れました"), 2000);
+          } else if (response.status === 404) {
+            errMsg = "ユーザーが存在しません。";
+          } else if (response.status === 500) {
+            errMsg = "サーバーエラーが発生しました。しばらく経ってからお試しください。";
+          }
+        }
+      }
+      
+      errorElem.textContent = errMsg;
+      errorElem.style.display = "block";
+    }
+  } catch (e) {
+    // 通信エラーの処理
+    console.error('送信エラー:', e);
+    errorElem.textContent = "通信エラー: " + e.message;
+    errorElem.style.display = "block";
+  } finally {
+    // ボタンを元に戻す
+    sendButton.disabled = false;
+    sendButton.innerHTML = '送信';
+  }
+}
+
+// UIにチャットメッセージを追加
+function addChatMessageToUI(chat) {
+  const chatHistoryElem = document.getElementById('chatHistory');
+  const messageDiv = document.createElement('div');
+  
+  // 自分のメッセージかどうかでクラスを変える
+  messageDiv.className = `chat-message ${chat.username === currentUser.username ? 'own' : 'other'}`;
+  
+  // タイムスタンプの処理
+  let timestamp;
+  try {
+    timestamp = new Date(chat.timestamp).toLocaleString('ja-JP');
+  } catch (e) {
+    timestamp = '不明な日時';
+  }
+  
+  // メッセージ内容のHTMLエスケープ
+  const escapedMessage = escapeHtml(chat.message);
+  
+  // メッセージのHTML構造
+  messageDiv.innerHTML = `
+    <div class="username">${escapeHtml(chat.username)}</div>
+    <div class="content">${escapedMessage}</div>
+    <div class="timestamp">${timestamp}</div>
+  `;
+  
+  // チャット履歴に追加
+  chatHistoryElem.appendChild(messageDiv);
+  
+  // 最新メッセージまでスクロール
+  messageDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+// HTMLエスケープ関数
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ログイン画面へリダイレクト
+function redirectToLogin(errorMessage) {
+  // エラーメッセージがあれば、URLパラメータとして渡す
+  if (errorMessage) {
+    window.location.href = 'login.html?error=' + encodeURIComponent(errorMessage);
+  } else {
+    window.location.href = 'login.html';
+  }
+}
+
+// ログアウト処理
+async function logout() {
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    
+    // セッションストレージのクリア
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('username');
+    
+    // ログイン画面へ移動
+    redirectToLogin();
+  } catch (error) {
+    console.error('ログアウトエラー:', error);
+    redirectToLogin();
+  }
+}
+
+// Enterキーでの送信サポート（Shift+Enterで改行）
+document.getElementById("messageContent").addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendChat();
+  }
+});
+</script>
+
+</body>
+</html>
