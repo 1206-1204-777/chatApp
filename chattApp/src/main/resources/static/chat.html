@@ -542,22 +542,30 @@ function redirectToLogin(errorMessage) {
 // ログアウト処理
 async function logout() {
   try {
-    await fetch('/api/auth/logout', {
+    const userId = sessionStorage.getItem('userId');
+    console.log('ログアウト実行、userId =', userId); // ★確認ログ追加
+
+    const response = await fetch('/api/user/logout', {
       method: 'POST',
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userId })
     });
-    
-    // セッションストレージのクリア
+
+    console.log('レスポンス:', response.status); // ★レスポンス確認
+
     sessionStorage.removeItem('userId');
     sessionStorage.removeItem('username');
     
-    // ログイン画面へ移動
     redirectToLogin();
   } catch (error) {
     console.error('ログアウトエラー:', error);
     redirectToLogin();
   }
 }
+
 
 // Enterキーでの送信サポート（Shift+Enterで改行）
 document.getElementById("messageContent").addEventListener("keydown", function(e) {

@@ -34,7 +34,7 @@ public class UserController {
 
 		
 	}
-	
+
 	/*ログアウト処理*/
 	@PostMapping("/logout")
 	public ResponseEntity<Boolean> logout(@RequestBody @Valid SendUserDto dto){
