@@ -17,7 +17,7 @@ import com.example.ChatApp.dto.user.UserRegistrationDto;
 import com.example.ChatApp.exception.UserSaveFailedException;
 import com.example.ChatApp.service.user.UserService;
 
-class UserControllerTest2 {
+class UserControllerTest {
 	 @Mock
 	    private UserService service;
 
@@ -176,10 +176,10 @@ class UserControllerTest2 {
 		
 		
 		@Test
-		void 登録失敗時() {
+		void 登録失敗時_パスワードミス() {
 			
 			UserRegistrationDto registration = new UserRegistrationDto();
-			registration.setUsername(null);
+			registration.setUsername("taro");
 			registration.setPassword(null);
 
 			
@@ -187,6 +187,37 @@ class UserControllerTest2 {
 			{controller.Registration(registration);});
 		}
 		
+
+		@Test
+		void 登録失敗時_ユーザー無し() {
+			
+			UserRegistrationDto registration = new UserRegistrationDto();
+			registration.setUsername(null);
+			registration.setPassword("pass123");
+
+			assertThrows(UserSaveFailedException.class,()->
+			{controller.Registration(registration);});
+		}
+		
+		@SuppressWarnings("null")
+		@Test
+		void ログアウト成功時() {
+			SendUserDto dto = new SendUserDto(1L,"taro");
+			
+			when(service.statusChangeuser(1L)).thenReturn(true);
+			
+			ResponseEntity<Boolean>response = controller.logout(dto);
+			assertTrue(response.getBody());
+			
+		}
+		
+		@Test
+		void ログアウト失敗_ユーザー無し() {
+		SendUserDto dto = new SendUserDto(null,"taro");
+		assertThrows(RuntimeException.class,()->{
+			controller.logout(dto);
+		});
+		}
 		
 
 

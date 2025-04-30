@@ -134,26 +134,27 @@ class UserServiceImplTest {
 		//assertNotNull(result.getUserId()); // IDは実装で生成される想定
 	}
 
-	/*@Test
+	@Test
 	void statusChangeUser_正常系() {
 		UserEntity user = new UserEntity();
-		user.setId(1L);
+		user.setUserId(1L);
 		user.setStatus(true);
 
-		when(repository.findById(1L)).thenReturn(Optional.of(user));
-
-		boolean result = userService.statusChangeuser(1L);
+		when(repository.findByUserId(1L)).thenReturn(Optional.of(user));
+		when(repository.save(any(UserEntity.class))).thenReturn(user);
+		boolean result = userService.statusChangeuser(user.getUserId());
 
 		assertTrue(result);
-		assertFalse(user.isStatus()); // ステータスが false になったことを確認
+		assertFalse(user.isStatus());
+	
 	}
 
 	@Test
 	void statusChangeUser_ユーザーなし() {
-		when(repository.findById(1L)).thenReturn(Optional.empty());
+		when(repository.findByUserId(1L)).thenReturn(Optional.empty());
 
 		assertThrows(AuthenticationFailedException.class, () -> {
 			userService.statusChangeuser(1L);
 		});
-	}*/
+	}
 }

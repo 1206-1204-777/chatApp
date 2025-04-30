@@ -37,7 +37,10 @@ public class UserController {
 
 	/*ログアウト処理*/
 	@PostMapping("/logout")
-	public ResponseEntity<Boolean> logout(@RequestBody @Valid SendUserDto dto){
+	public ResponseEntity<Boolean> logout(@RequestBody @Valid SendUserDto dto) {
+		if(dto.getUserId()==null) {
+			throw new RuntimeException();
+		}
 		boolean reslut = service.statusChangeuser(dto.getUserId());
 		return ResponseEntity.ok(reslut);
 		
